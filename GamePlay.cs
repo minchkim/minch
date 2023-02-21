@@ -9,6 +9,7 @@ public class GamePlay : MonoBehaviour
     [SerializeField] float gaugeTime = 1f;
     bool interacting = false;
     bool returning = false;
+    bool serving = false;
     GameObject slider;
     Ingridient ingridient;
     string haveingridient;
@@ -23,6 +24,7 @@ public class GamePlay : MonoBehaviour
     [SerializeField] Sprite grill;
     [SerializeField] Sprite chop;
     [SerializeField] Sprite bluecheck;
+    [SerializeField] Sprite domeCover;
 
     [SerializeField] GameObject havenow;
     Image havenowImage;
@@ -36,6 +38,14 @@ public class GamePlay : MonoBehaviour
 
     public bool isComplete = false;
     public bool isDelivering = false;
+
+    Complete complete;
+    Table table;
+    Recipe recipe;
+
+    string tableName;
+
+    public bool hasServed = false;
     
 
     void Awake()
@@ -45,14 +55,25 @@ public class GamePlay : MonoBehaviour
         slider.SetActive(false);
         havenowImage = havenow.GetComponent<Image>();
 
-        Recipe recipe = FindObjectOfType<Recipe>();
+        recipe = FindObjectOfType<Recipe>();
         orderList = recipe.orderList;
         foodImageList = recipe.foodImageList;
+
+        complete = FindObjectOfType<Complete>();
+        
+        complete.gameObject.SetActive(false);
     }
 
     void Update()
     {
-        if (interacting)
+        if (recipe.hasTimeOuted)
+        {
+            Debug.Log("Timeout");
+            TimeOut();
+            recipe.hasTimeOuted = false;
+        }
+        
+        if (interacting && !isDelivering)
         {
             if (Input.GetButton("Jump"))
             {
@@ -61,6 +82,7 @@ public class GamePlay : MonoBehaviour
                 DisableMovement();
                 if (gaugeBar.value == gaugeBar.maxValue)
                 {
+                    gaugeBar.value = 0;
                     slider.SetActive(false);
                     EnableMovement();
                     haveingridient = ingridient.GetIngridient();
@@ -77,7 +99,7 @@ public class GamePlay : MonoBehaviour
             }
         }
 
-        if (returning && (haveingridient == "Pike" || haveingridient == "Shrimp" || haveingridient == "Meat" || haveingridient == "Pork" || haveingridient == "Seafood"))
+        if (returning && (haveingridient == "Pike" || haveingridient == "Shrimp" || haveingridient == "Meat" || haveingridient == "Pork" || haveingridient == "Seafood") && !isDelivering)
         {
             if (Input.GetButton("Jump"))
             {
@@ -86,6 +108,7 @@ public class GamePlay : MonoBehaviour
                 DisableMovement();
                 if (gaugeBar.value == gaugeBar.maxValue)
                 {
+                    gaugeBar.value = 0;
                     slider.SetActive(false);
                     EnableMovement();
                     int idx = checkList.FindIndex(a => a.Contains(haveingridient));
@@ -110,8 +133,14 @@ public class GamePlay : MonoBehaviour
                     }
                 }
             }
+            else if (!Input.GetButton("Jump"))
+            {
+                slider.SetActive(false);
+                gaugeBar.value = 0;
+                EnableMovement();
+            }
         }
-        else if (returning && (haveingridient == "Pan" || haveingridient == "Grill" || haveingridient == "Chop"))
+        else if (returning && (haveingridient == "Pan" || haveingridient == "Grill" || haveingridient == "Chop") && !isDelivering)
         {
             if (Input.GetButton("Jump"))
             {
@@ -120,6 +149,7 @@ public class GamePlay : MonoBehaviour
                 DisableMovement();
                 if (gaugeBar.value == gaugeBar.maxValue)
                 {
+                    gaugeBar.value = 0;
                     slider.SetActive(false);
                     EnableMovement();
                     int idx = checkList.FindIndex(a => a.Contains(haveingridient));
@@ -142,6 +172,80 @@ public class GamePlay : MonoBehaviour
                     }
                 }
             }
+            else if (!Input.GetButton("Jump"))
+            {
+                slider.SetActive(false);
+                gaugeBar.value = 0;
+                EnableMovement();
+            }
+        }
+
+        if (isComplete && !isDelivering)
+        {
+           complete.gameObject.SetActive(true);
+           
+           if (Input.GetButton("Jump"))
+            {
+                slider.SetActive(true);
+                gaugeBar.value += Time.deltaTime;
+                DisableMovement();
+                if (gaugeBar.value == gaugeBar.maxValue)
+                {
+                    isDelivering = true;
+                    slider.SetActive(false);
+                    EnableMovement();
+                    
+                    havenowImage.sprite = domeCover;
+                    havenow.SetActive(true);
+                }
+            }
+
+            else if (!Input.GetButton("Jump"))
+            {
+                EnableMovement();
+                slider.SetActive(false);
+                gaugeBar.value = 0;
+            }
+        }
+
+        if (isDelivering && serving)
+        {
+            if (Input.GetButton("Jump"))
+            {
+                slider.SetActive(true);
+                gaugeBar.value += Time.deltaTime;
+                DisableMovement();
+                if (gaugeBar.value == gaugeBar.maxValue)
+                {
+                    tableName = table.GetTableName();
+                    Debug.Log(tableName);
+                    EnableMovement();
+                
+                    if (TableCheck())
+                    {
+                        hasServed = true;
+                        slider.SetActive(false);
+                        ImageReset();
+                        complete.gameObject.SetActive(false);
+                        isDelivering = false;
+                        serving = false;
+                        isComplete = false;
+                        Debug.Log("grats!!!");
+                    }
+                    else if (!TableCheck())
+                    {
+                        Stun(3f);
+                        slider.SetActive(false);
+                        Debug.Log("nonono!!");
+                    }
+                }
+            }
+
+            else if (!Input.GetButton("Jump"))
+            {
+                slider.SetActive(false);
+                gaugeBar.value = 0;
+            }
         }
     }
 
@@ -158,6 +262,11 @@ public class GamePlay : MonoBehaviour
             returning = true;
             Debug.Log(returning);
         }
+        else if (other.tag == "Table")
+        {
+            serving = true;
+            table = other.GetComponent<Table>();
+        }
     }
 
     void OnTriggerExit2D(Collider2D other)
@@ -170,6 +279,12 @@ public class GamePlay : MonoBehaviour
         {
             returning = false;
             Debug.Log(returning);
+        }
+        else if (other.tag == "Table")
+        {
+            serving = false;
+            tableName = "None";
+            Debug.Log(tableName);
         }
     }
 
@@ -257,5 +372,43 @@ public class GamePlay : MonoBehaviour
             isComplete = true;
             Debug.Log("Complete!!");
         }
+    }
+
+    bool TableCheck()
+    {
+        if (recipe.customerno == 0 && tableName == "Yeti")
+        {
+            return true;
+        }
+        else if (recipe.customerno == 1 && tableName == "Pepe")
+        {
+            return true;
+        }
+        else if (recipe.customerno == 2 && tableName == "Pinkbean")
+        {
+            return true;
+        }
+        else if (recipe.customerno == 3 && tableName == "Pig")
+        {
+            return true;
+        }
+        else if (recipe.customerno == 4 && tableName == "Slime")
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void TimeOut()
+    {
+        haveingridient = "None";
+        ImageReset();
+        complete.gameObject.SetActive(false);
+        isDelivering = false;
+        serving = false;
+        isComplete = false;
     }
 }
