@@ -9,16 +9,26 @@ public class Ingridient : MonoBehaviour
     [SerializeField] string ingridientName;
     public SpriteRenderer spriteRenderer;
     GamePlay gamePlay;
+    Recipe recipe;
 
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         gamePlay = FindObjectOfType<GamePlay>();
+        recipe = FindObjectOfType<Recipe>();
     }
 
     void Update()
     {
-        if (gamePlay.isComplete)
+        if (recipe.hasTimeOuted)
+        {
+            spriteRenderer.enabled = false;
+        }
+        else if (gamePlay.isComplete && gamePlay.isDelivering)
+        {
+            spriteRenderer.enabled = false;
+        }
+        else if (gamePlay.isComplete)
         {
             spriteRenderer.enabled = true;
         }
