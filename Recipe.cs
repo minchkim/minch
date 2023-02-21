@@ -16,6 +16,10 @@ public class Recipe : MonoBehaviour
     [SerializeField] List<Image> foodToMakeList = new List<Image>();
     [SerializeField] List<Image> cuisineToMakeList = new List<Image>();
 
+    [Header("Customer")]
+    [SerializeField] List<Sprite> customerList = new List<Sprite>();
+    [SerializeField] Image currentCustomer;
+
     [SerializeField] GameObject[] foodMaker;
     Image foodImage;
 
@@ -26,6 +30,8 @@ public class Recipe : MonoBehaviour
     [SerializeField] TextMeshProUGUI minuteTimer;
     [SerializeField] TextMeshProUGUI secondTimer;
     [SerializeField] TextMeshProUGUI getPoint;
+    [SerializeField] TextMeshProUGUI totalPoint;
+    int newPoint;
 
     List<int> rawfood = new List<int>(){0, 1, 2, 3, 4};
     List<int> maker = new List<int>(){0, 1, 2};
@@ -40,11 +46,20 @@ public class Recipe : MonoBehaviour
     public List<Image> foodImageList = new List<Image>();
 
     int difficulty;
+    int point;
+
+    public int customerno;
+    public bool hasTimeOuted;
+
+    GamePlay gamePlay;
 
     void Awake()
     {
+        gamePlay = FindObjectOfType<GamePlay>();
+        CustomerReset();
         DifficultySetting();
         Debug.Log(string.Join(",", orderList));
+        totalPoint.text = newPoint.ToString();
     }
 
     // Update is called once per frame
@@ -53,9 +68,21 @@ public class Recipe : MonoBehaviour
         TimerSetting();
         if (remainTime < 0)
         {
+            CustomerReset();
             DifficultySetting();
             TimerSetting();
             Debug.Log(string.Join(",", orderList));
+            hasTimeOuted = true;
+        }
+
+        if (gamePlay.hasServed)
+        {
+            newPoint += point;
+            totalPoint.text = newPoint.ToString();
+            CustomerReset();
+            DifficultySetting();
+            TimerSetting();
+            gamePlay.hasServed = false;
         }
     }
 
@@ -76,9 +103,11 @@ public class Recipe : MonoBehaviour
         int easymakerno = Random.Range(1, 3);
         int hardrawfoodno = 4;
         int hardmakerno = Random.Range(2, 4);
-        int point;
+        
+        
         
         Image foodImage;
+        
         List<Image> foodImageRawFoodList = new List<Image>();
         List<Image> foodImageMakerList = new List<Image>();
 
@@ -165,6 +194,8 @@ public class Recipe : MonoBehaviour
                 foodImageList.Add(foodImageMakerList[i]);
             }
         }
+        
+        currentCustomer.sprite = customerList[customerno];
     }
 
     void TimerSetting()
@@ -174,6 +205,10 @@ public class Recipe : MonoBehaviour
         secondTimer.text = Mathf.FloorToInt(remainTime % 60f).ToString();
     }
 
+    void CustomerReset()
+    {
+        customerno = Random.Range(0, 5);
+    }
 
     List<int> GetRandomNumbers(List<int> numbers, int count)
     {
