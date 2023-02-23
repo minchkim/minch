@@ -13,6 +13,7 @@ public class GamePlay : MonoBehaviour
     GameObject slider;
     Ingridient ingridient;
     string haveingridient;
+    float blinkTime = 0.3f;
 
     [Header("FoodImage")]
     [SerializeField] Sprite pike;
@@ -46,6 +47,8 @@ public class GamePlay : MonoBehaviour
     string tableName;
 
     public bool hasServed = false;
+
+    SpriteRenderer spriter;
     
 
     void Awake()
@@ -59,8 +62,9 @@ public class GamePlay : MonoBehaviour
         orderList = recipe.orderList;
         foodImageList = recipe.foodImageList;
 
-        complete = FindObjectOfType<Complete>();
-        
+        spriter = GetComponent<SpriteRenderer>();
+
+        complete = FindObjectOfType<Complete>();        
         complete.gameObject.SetActive(false);
     }
 
@@ -267,6 +271,12 @@ public class GamePlay : MonoBehaviour
             serving = true;
             table = other.GetComponent<Table>();
         }
+
+        else if (other.tag == "Enemy")
+        {
+            GetDamaged();
+            Stun(2f);
+        }
     }
 
     void OnTriggerExit2D(Collider2D other)
@@ -410,5 +420,25 @@ public class GamePlay : MonoBehaviour
         isDelivering = false;
         serving = false;
         isComplete = false;
+    }
+
+    void GetDamaged()
+    {
+        OnDamaged();
+        Invoke("OffDamaged", blinkTime);
+        Invoke("OnDamaged", blinkTime * 2);
+        Invoke("OffDamaged", blinkTime * 3);
+        Invoke("OnDamaged", blinkTime * 4);
+        Invoke("OffDamaged", blinkTime * 5);
+    }
+
+    void OnDamaged()
+    {
+        spriter.color = new Color(1,1,1,0.4f);
+    }
+
+    void OffDamaged()
+    {
+        spriter.color = new Color(1,1,1,1);
     }
 }
