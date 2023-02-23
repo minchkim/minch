@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class Recipe : MonoBehaviour
 {
@@ -29,6 +30,12 @@ public class Recipe : MonoBehaviour
     float remainTime;
     [SerializeField] TextMeshProUGUI minuteTimer;
     [SerializeField] TextMeshProUGUI secondTimer;
+
+    [SerializeField] TextMeshProUGUI timeLimit;
+    float totalTime = 300f;
+    float remainMinute;
+    float remainSecond;
+
     [SerializeField] TextMeshProUGUI getPoint;
     [SerializeField] TextMeshProUGUI totalPoint;
     int newPoint;
@@ -83,6 +90,19 @@ public class Recipe : MonoBehaviour
             DifficultySetting();
             TimerSetting();
             gamePlay.hasServed = false;
+        }
+
+        if (timeLimit != null)
+        {
+            totalTime -= Time.deltaTime;
+            remainMinute = Mathf.FloorToInt(totalTime / 60f);
+            remainSecond = Mathf.FloorToInt(totalTime % 60f);
+            timeLimit.text = remainMinute + " : " + remainSecond;
+        
+            if (totalTime <= 0)
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }   
         }
     }
 
