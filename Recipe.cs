@@ -38,7 +38,7 @@ public class Recipe : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI getPoint;
     [SerializeField] TextMeshProUGUI totalPoint;
-    int newPoint;
+    public int newPoint;
 
     List<int> rawfood = new List<int>(){0, 1, 2, 3, 4};
     List<int> maker = new List<int>(){0, 1, 2};
@@ -57,6 +57,7 @@ public class Recipe : MonoBehaviour
 
     public int customerno;
     public bool hasTimeOuted;
+    public bool gameOver = false;
 
     GamePlay gamePlay;
 
@@ -101,7 +102,7 @@ public class Recipe : MonoBehaviour
         
             if (totalTime <= 0)
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                gameOver = true;
             }   
         }
     }
@@ -110,12 +111,9 @@ public class Recipe : MonoBehaviour
     {
         newrawfood.Clear();
         newmaker.Clear();
-
         rawfoodOrderList.Clear();
         cuisineOrderList.Clear();
-
         orderList.Clear();
-
         foodImageList.Clear();
 
         difficulty = Random.Range(1, 5);
@@ -123,8 +121,6 @@ public class Recipe : MonoBehaviour
         int easymakerno = Random.Range(1, 3);
         int hardrawfoodno = 4;
         int hardmakerno = Random.Range(2, 4);
-        
-        
         
         Image foodImage;
         
